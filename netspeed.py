@@ -20,12 +20,14 @@ class NetworkReader():
 
 	def getTotalUpDown(self):
 		up = down = 0
+		interfaceFound = False
 		try:
 			with open(DEFAULT_NET_FILE) as netFile:
 				for line in netFile:
 					line = line.strip()
 					if line.startswith(OPTIONS.interface):
 						# found the appropriate line
+						interfaceFound = True
 						line = ' '.join(line.split())
 						parts = line.split(' ')
 						if (len(parts) != COLUMNS_COUNT_IN_FILE):
@@ -33,8 +35,13 @@ class NetworkReader():
 						else:
 							up = int(parts[9])
 							down = int(parts[1])
+						# not interested in any other lines
+						break
 		except IOError:
 			error('The file ' + DEFAULT_NET_FILE + ' cannot be read')
+
+		if not interfaceFound:
+			error('The interface ' + OPTIONS.interface + ' is not present')
 
 		return up, down
 
