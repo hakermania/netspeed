@@ -13,7 +13,7 @@ def error(*objs):
 
 class NetworkReader():
 
-	SIZES = ['b', 'KiB', 'MiB', 'GiB', 'TiP', 'PiT']
+	SIZES = ['b', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']
 
 	def __init__(self, interface):
 		self.interface = interface
