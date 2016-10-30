@@ -3,8 +3,6 @@
 from __future__ import print_function
 import time, sys, argparse, os
 
-DEFAULT_INTERFACE = 'eth0'
-
 DEFAULT_NET_FILE = '/proc/net/dev'
 COLUMNS_COUNT_IN_FILE = 17;
 
@@ -67,18 +65,56 @@ class NetworkReader():
 			data = '{0:.2f}'.format(data)
 
 		return data + ' ' + NetworkReader.SIZES[sizeIndex] + '/s'
+
+        @staticmethod
+        def getInterface():
+            import subprocess
+            output = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE).communicate()
+            interfaces = set()
+            for txt in output:
+                if txt is None:
+                    continue
+                lines = txt.split('\n')
+
+                for line in lines:
+                    if line.startswith(' '):
+                        continue
+                    else:
+                        splitted = line.split(' ')
+                        if (len(splitted) > 0) and splitted[0] != '':
+                            interfaces.add(splitted[0])
+            
+            if len(interfaces) == 0:
+                return None
+
+            if len(interfaces) == 1:
+                return interfaces[0]
+
+            usual_not_used = {'lo'}
+            for interface in interfaces:
+                if interface in usual_not_used:
+                    continue
+                return interface
+
+            # last resort
+            return interface[0]
+
 		
 
 def parseOptions():
 	global OPTIONS
 	parser = argparse.ArgumentParser()
-	parser.add_argument('interface', metavar='interface', type=str, nargs='?', default=DEFAULT_INTERFACE, help='The interface to monitor')
+	parser.add_argument('interface', metavar='interface', type=str, nargs='?', default=NetworkReader.getInterface(), help='The interface to monitor')
 	parser.add_argument('--verbose', '-v', action='store_true', help='Show verbose messages')
 	parser.add_argument('--noclear', '-nc', action='store_true', help='Do not clear the screen every second')
 	OPTIONS = parser.parse_args()
 
 def main():
 	parseOptions()
+
+        if (OPTIONS.interface == ''):
+            print('Interface not found. Please specify one by passing it as first argument.')
+            sys.exit(1)
 
 	if (OPTIONS.verbose):
 		print('Using interface', OPTIONS.interface)
@@ -90,6 +126,7 @@ def main():
 
 		if not OPTIONS.noclear:
 			os.system('clear')
+                print('IFACE:', OPTIONS.interface.rjust(13))
 		print('UP   :', networkReader.format(upspeed).rjust(13))
 		print('DOWN :', networkReader.format(downspeed).rjust(13))
 
